@@ -91,6 +91,9 @@ def init_db():
             ])
             conn.commit()
 
+# Run database initialization unconditionally on app load
+init_db()
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -375,6 +378,5 @@ def login_user():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':
-    init_db()
     print("Database initialized successfully!")
     app.run(debug=True, host='0.0.0.0', port=5000)
