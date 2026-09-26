@@ -22,10 +22,10 @@
         </div>
 
         <div class="flex items-center gap-3 text-sm">
-            <!-- Portal Switcher (Admin button removed) -->
             <div class="bg-slate-900 p-1 rounded-lg border border-slate-700 flex items-center text-xs">
-                <button id="btn-gov" onclick="switchPortal('gov')" class="px-3 py-1.5 rounded-md font-semibold bg-indigo-600 text-white transition">Government Reviewer</button>
+                <button id="btn-gov" onclick="switchPortal('gov')" class="px-3 py-1.5 rounded-md font-semibold text-slate-400 hover:text-white transition">Government Reviewer</button>
                 <button id="btn-contractor" onclick="switchPortal('contractor')" class="px-3 py-1.5 rounded-md font-semibold text-slate-400 hover:text-white transition">Contractor Portal</button>
+                <button id="btn-admin" onclick="switchPortal('admin')" class="hidden px-3 py-1.5 rounded-md font-semibold text-slate-400 hover:text-white transition">Admin Registry</button>
             </div>
 
             <!-- Profile Badge -->
@@ -37,7 +37,6 @@
                 </div>
             </div>
 
-            <!-- Auth Button -->
             <button id="auth-btn" onclick="toggleAuthModal(true)" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
                 <i class="fa-solid fa-right-to-bracket"></i> Login / Register
             </button>
@@ -65,6 +64,19 @@
                 </div>
             </div>
 
+            <!-- 3-Party Consensus Pending Requests Widget -->
+            <div class="bg-slate-800 border border-indigo-500/30 rounded-xl p-5 space-y-3">
+                <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                    <h3 class="text-sm font-bold text-indigo-300 flex items-center gap-2">
+                        <i class="fa-solid fa-users-check text-indigo-400"></i> Pending Multi-Party Progress Approval Consensus
+                    </h3>
+                    <button onclick="loadApprovalRequests()" class="text-xs text-slate-400 hover:text-white"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                </div>
+                <div id="approval-requests-container" class="space-y-3">
+                    <p class="text-xs text-slate-400">Loading pending change requests...</p>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl">
                     <p class="text-xs text-slate-400 uppercase font-semibold">Assigned Projects (Maharashtra)</p>
@@ -85,7 +97,6 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Jurisdiction Queue -->
                 <div class="bg-slate-800 border border-slate-700 rounded-xl p-6">
                     <h2 class="text-md font-bold text-white mb-4 flex items-center justify-between">
                         <span>Jurisdiction Queue</span>
@@ -96,7 +107,6 @@
                     </div>
                 </div>
 
-                <!-- Dynamic Project Review Area -->
                 <div class="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-xl p-6">
                     <div id="alert-banner" class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6 flex items-start gap-3">
                         <i class="fa-solid fa-triangle-exclamation text-red-400 text-xl mt-0.5"></i>
@@ -136,7 +146,6 @@
                         <div id="shap-causes" class="space-y-4"></div>
                     </div>
 
-                    <!-- Dynamic What-If Simulator -->
                     <div class="bg-slate-900/90 p-5 rounded-xl border border-indigo-500/30 mb-6">
                         <h4 class="text-sm font-bold text-indigo-300 mb-1 flex items-center gap-2">
                             <i class="fa-solid fa-sliders text-indigo-400"></i> What-If Intervention Simulator
@@ -170,24 +179,24 @@
             </div>
         </section>
 
-        <!-- View 2: Contractor Digital Submission Portal -->
+        <!-- View 2: Contractor / Stakeholder Submission Portal -->
         <section id="contractor-view" class="hidden max-w-2xl mx-auto bg-slate-800 border border-slate-700 rounded-xl p-6">
             <div class="border-b border-slate-700 pb-4 mb-6">
                 <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-hard-hat text-indigo-400"></i> Contractor Monthly Digital Progress Portal
+                    <i class="fa-solid fa-hard-hat text-indigo-400"></i> Propose Progress Update (3-Party Consensus Required)
                 </h2>
-                <p class="text-xs text-slate-400 mt-1">Submit digital progress logs directly to government AI evaluation pipeline.</p>
+                <p class="text-xs text-slate-400 mt-1">Submitting a new progress percentage initiates a consensus approval request sent to the Government Officer, Contractor, and Site Engineer.</p>
             </div>
 
             <form id="contractor-form" onsubmit="submitContractorReport(event)" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Assigned Verified Infrastructure Project</label>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Assigned Infrastructure Project</label>
                     <select id="c-project" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                     </select>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Current Physical Completion Progress (%)</label>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Proposed Physical Progress (%)</label>
                     <input type="number" id="c-progress" min="0" max="100" value="65" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                 </div>
 
@@ -197,12 +206,12 @@
                 </div>
 
                 <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg text-sm transition cursor-pointer">
-                    Submit Progress Report to MoSPI
+                    Request 3-Party Progress Update
                 </button>
             </form>
         </section>
 
-        <!-- View 3: Admin Portal (Accessible ONLY on Admin Login) -->
+        <!-- View 3: Admin Portal -->
         <section id="admin-view" class="hidden bg-slate-800 border border-slate-700 rounded-xl p-6 space-y-6">
             <div class="flex flex-wrap items-center justify-between border-b border-slate-700 pb-4 gap-4">
                 <div>
@@ -237,7 +246,7 @@
 
     </main>
 
-    <!-- User Profile Modal -->
+    <!-- Profile Modal -->
     <div id="profile-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
         <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl relative space-y-4">
             <button onclick="toggleProfileModal(false)" class="absolute top-4 right-4 text-slate-400 hover:text-white">
@@ -290,13 +299,9 @@
             </div>
 
             <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
-                <div class="bg-indigo-950/40 p-2.5 rounded-lg border border-indigo-500/30 text-[11px] text-indigo-300">
-                    <p class="font-semibold"><i class="fa-solid fa-user-shield"></i> Admin Quick Credentials:</p>
-                    <p>Email: <code class="text-white">admin@mospi.gov.in</code> | Password: <code class="text-white">admin123</code></p>
-                </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-300 mb-1">Official Email Address</label>
-                    <input type="email" id="login-email" required placeholder="e.g. admin@mospi.gov.in" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    <input type="email" id="login-email" required placeholder="e.g. rakesh.sharma@mospi.gov.in" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-300 mb-1">Password</label>
@@ -310,19 +315,19 @@
             <form id="register-form" onsubmit="handleRegistration(event)" class="space-y-4 hidden">
                 <div>
                     <label class="block text-xs font-semibold text-slate-300 mb-1">Full Name</label>
-                    <input type="text" id="reg-name" required placeholder="e.g. Om Aswar" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    <input type="text" id="reg-name" required placeholder="e.g. Rakesh Sharma" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-300 mb-1">Official Email Address</label>
-                    <input type="email" id="reg-email" required placeholder="e.g. omaswar175@gmail.com" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    <input type="email" id="reg-email" required placeholder="e.g. rakesh.sharma@mospi.gov.in" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 mb-1">Role</label>
                         <select id="reg-role" onchange="toggleContractorVerificationFields()" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
-                            <option value="Government Officer">Government Officer</option>
+                            <option value="Government Officer">Government Officer (Admin)</option>
                             <option value="Contractor">Contractor</option>
                             <option value="Site Engineer">Site Engineer</option>
                         </select>
@@ -355,6 +360,10 @@
         let projectsData = [];
         let selectedProjectId = 1;
 
+        function isUserAdmin(user) {
+            return user && (user.role === 'Government Officer' || user.role === 'Platform Administrator');
+        }
+
         function loadProjects() {
             fetch('/api/projects')
                 .then(res => res.json())
@@ -363,13 +372,14 @@
                     const list = document.getElementById('project-list');
                     list.innerHTML = '';
                     projectsData.forEach((p) => {
-                        const badgeClass = p.risk_level === 'High' ? 'bg-red-500/20 text-red-400 border-red-500/30' : 
+                        const badgeClass = p.fraud_discrepancy ? 'bg-red-600 text-white font-bold border-red-400 animate-pulse' :
+                                          p.risk_level === 'High' ? 'bg-red-500/20 text-red-400 border-red-500/30' : 
                                           p.risk_level === 'Medium' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
                         list.innerHTML += `
-                            <div onclick="selectProject(${p.id})" class="p-4 bg-slate-900/50 rounded-lg border ${p.risk_level === 'High' ? 'border-red-500/40 ring-1 ring-red-500/20' : 'border-slate-700/60'} hover:border-slate-400 transition cursor-pointer">
+                            <div onclick="selectProject(${p.id})" class="p-4 bg-slate-900/50 rounded-lg border ${p.fraud_discrepancy ? 'border-red-500 ring-2 ring-red-500/50' : p.risk_level === 'High' ? 'border-red-500/40' : 'border-slate-700/60'} hover:border-slate-400 transition cursor-pointer">
                                 <div class="flex justify-between items-start">
                                     <h4 class="text-sm font-bold text-white">${p.name}</h4>
-                                    <span class="text-[10px] px-2 py-0.5 rounded border ${badgeClass}">${p.risk_level} Risk</span>
+                                    <span class="text-[10px] px-2 py-0.5 rounded border ${badgeClass}">${p.fraud_discrepancy ? 'FRAUD ALERT' : p.risk_level + ' Risk'}</span>
                                 </div>
                                 <div class="flex justify-between items-center mt-3 text-xs text-slate-400">
                                     <span>Budget: ${p.cost}</span>
@@ -380,6 +390,70 @@
                     });
                     if (projectsData.length > 0) selectProject(selectedProjectId);
                 });
+        }
+
+        function loadApprovalRequests() {
+            fetch('/api/approval/requests')
+                .then(res => res.json())
+                .then(data => {
+                    const container = document.getElementById('approval-requests-container');
+                    if (data.data.length === 0) {
+                        container.innerHTML = `<p class="text-xs text-slate-400 italic">No pending 3-party progress change requests.</p>`;
+                        return;
+                    }
+                    container.innerHTML = '';
+                    data.data.forEach(req => {
+                        container.innerHTML += `
+                            <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700 flex flex-wrap justify-between items-center gap-3 text-xs">
+                                <div>
+                                    <p class="font-bold text-white">${req.project_name}</p>
+                                    <p class="text-slate-400">Proposed Progress: <span class="text-indigo-400 font-bold">${req.proposed_progress}%</span> | Requested by: ${req.requested_by_email} (${req.requested_by_role})</p>
+                                    <p class="text-slate-500 text-[11px] mt-1">Note: "${req.notes}"</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="flex gap-1 text-[10px]">
+                                        <span class="px-2 py-0.5 rounded ${req.gov_approved ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-500'}">Gov Officer</span>
+                                        <span class="px-2 py-0.5 rounded ${req.contractor_approved ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-500'}">Contractor</span>
+                                        <span class="px-2 py-0.5 rounded ${req.engineer_approved ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-500'}">Site Engineer</span>
+                                    </div>
+                                    <div class="flex gap-1">
+                                        <button onclick="voteApproval(${req.id}, 'approve')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1 rounded text-xs transition">
+                                            Approve Change
+                                        </button>
+                                        <button onclick="voteApproval(${req.id}, 'reject')" class="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1 rounded text-xs transition">
+                                            Don't Approve
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                });
+        }
+
+        function voteApproval(requestId, action) {
+            if (!currentUser) {
+                alert("Please login first to cast a vote!");
+                toggleAuthModal(true);
+                return;
+            }
+
+            fetch('/api/approval/vote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    request_id: requestId,
+                    user_role: currentUser.role,
+                    user_email: currentUser.email,
+                    action: action
+                })
+            })
+            .then(async (res) => {
+                const data = await res.json();
+                alert(data.message);
+                loadApprovalRequests();
+                loadProjects();
+            });
         }
 
         function selectProject(id) {
@@ -396,7 +470,13 @@
             const badge = document.getElementById('risk-badge');
             const alertBanner = document.getElementById('alert-banner');
             
-            if (p.risk_level === 'High') {
+            if (p.fraud_discrepancy) {
+                badge.className = "bg-red-600 text-white font-bold border border-red-400 text-xs px-2.5 py-1 rounded animate-pulse";
+                badge.innerText = "FRAUD DISCREPANCY DETECTED";
+                alertBanner.className = "bg-red-600/20 border border-red-500 rounded-lg p-4 mb-6 flex items-start gap-3";
+                document.getElementById('alert-title').innerText = "CRITICAL FRAUD DISCREPANCY DETECTED BY ANTI-CORRUPTION PIPELINE";
+                document.getElementById('alert-desc').innerText = `Contractor progress claim (${p.progress}%) conflicts with Financial Gateway payouts (${p.financial_payout_pct}%) and Field Engineer verification logs (${p.field_engineer_pct}%). Data flagged for audit.`;
+            } else if (p.risk_level === 'High') {
                 badge.className = "bg-red-500/20 text-red-400 border border-red-500/30 text-xs px-2.5 py-1 rounded font-semibold";
                 badge.innerText = "HIGH RISK";
                 alertBanner.className = "bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6 flex items-start gap-3";
@@ -420,7 +500,12 @@
             const simLabel = document.getElementById('simulator-label');
             const simDesc = document.getElementById('sim-desc');
 
-            if (p.id === 1) { // Nagpur
+            if (p.fraud_discrepancy) {
+                shapBox.innerHTML = `
+                    <div><div class="flex justify-between text-xs mb-1"><span class="text-red-400 font-bold">Contractor False Data Claim vs Financial Gateway</span><span class="text-red-400 font-bold">80% Anomaly Impact</span></div><div class="w-full bg-slate-800 h-2.5 rounded-full"><div class="bg-red-500 h-full rounded-full" style="width: 80%"></div></div></div>
+                    <div><div class="flex justify-between text-xs mb-1"><span class="text-amber-400 font-bold">Field Engineer Inspection Discrepancy</span><span class="text-amber-400 font-bold">20% Anomaly Impact</span></div><div class="w-full bg-slate-800 h-2.5 rounded-full"><div class="bg-amber-500 h-full rounded-full" style="width: 20%"></div></div></div>
+                `;
+            } else if (p.id === 1) { // Nagpur
                 simLabel.innerText = "Forest Clearance Target Timeframe:";
                 simDesc.innerText = "Simulate forest clearance approval speed to see live impact on completion schedule and taxpayer savings:";
                 shapBox.innerHTML = `
@@ -467,8 +552,7 @@
                     const tbody = document.getElementById('admin-user-table-body');
                     tbody.innerHTML = '';
                     data.data.forEach(u => {
-                        const roleColor = u.role === 'Platform Administrator' ? 'text-red-400 font-bold' : 
-                                          u.role === 'Contractor' ? 'text-amber-400' : 'text-indigo-400';
+                        const roleColor = (u.role === 'Government Officer' || u.role === 'Platform Administrator') ? 'text-indigo-400 font-bold' : 'text-amber-400';
                         tbody.innerHTML += `
                             <tr class="hover:bg-slate-700/40 transition">
                                 <td class="p-3 font-mono font-bold">#${u.id}</td>
@@ -513,12 +597,18 @@
                 return;
             }
 
+            if (type === 'admin' && !isUserAdmin(currentUser)) {
+                alert("ACCESS RESTRICTED: Only Government Officers / Admins can access the Admin User Registry!");
+                return;
+            }
+
             document.getElementById('gov-view').classList.add('hidden');
             document.getElementById('contractor-view').classList.add('hidden');
             document.getElementById('admin-view').classList.add('hidden');
 
             document.getElementById('btn-gov').className = 'px-3 py-1.5 rounded-md font-semibold text-slate-400 hover:text-white transition';
             document.getElementById('btn-contractor').className = 'px-3 py-1.5 rounded-md font-semibold text-slate-400 hover:text-white transition';
+            document.getElementById('btn-admin').className = 'px-3 py-1.5 rounded-md font-semibold text-slate-400 hover:text-white transition';
 
             if (type === 'gov') {
                 document.getElementById('gov-view').classList.remove('hidden');
@@ -530,6 +620,7 @@
             } else if (type === 'admin') {
                 loadAdminUserRegistry();
                 document.getElementById('admin-view').classList.remove('hidden');
+                document.getElementById('btn-admin').className = 'px-3 py-1.5 rounded-md font-semibold bg-indigo-600 text-white transition';
             }
         }
 
@@ -593,8 +684,7 @@
                     toggleAuthModal(false);
                     document.getElementById('login-form').reset();
 
-                    // Automatically switch view based on user role
-                    if (currentUser.role === 'Platform Administrator') {
+                    if (isUserAdmin(currentUser)) {
                         switchPortal('admin');
                     } else if (currentUser.role === 'Contractor') {
                         switchPortal('contractor');
@@ -636,7 +726,9 @@
                     toggleAuthModal(false);
                     document.getElementById('register-form').reset();
 
-                    if (currentUser.role === 'Contractor') {
+                    if (isUserAdmin(currentUser)) {
+                        switchPortal('admin');
+                    } else if (currentUser.role === 'Contractor') {
                         switchPortal('contractor');
                     } else {
                         switchPortal('gov');
@@ -656,6 +748,12 @@
             document.getElementById('nav-user-role').innerText = `${user.role} (${user.organization})`;
             document.getElementById('auth-btn').innerHTML = `<i class="fa-solid fa-right-from-bracket"></i> Logout`;
             document.getElementById('auth-btn').onclick = logoutUser;
+
+            if (isUserAdmin(user)) {
+                document.getElementById('btn-admin').classList.remove('hidden');
+            } else {
+                document.getElementById('btn-admin').classList.add('hidden');
+            }
         }
 
         function logoutUser() {
@@ -664,6 +762,7 @@
             document.getElementById('nav-user-role').innerText = "Not Logged In";
             document.getElementById('auth-btn').innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> Login / Register`;
             document.getElementById('auth-btn').onclick = () => toggleAuthModal(true);
+            document.getElementById('btn-admin').classList.add('hidden');
             switchPortal('gov');
             alert("You have logged out.");
         }
@@ -674,7 +773,9 @@
                 project_id: document.getElementById('c-project').value,
                 user_assigned_project_id: currentUser ? currentUser.assigned_project_id : null,
                 user_role: currentUser ? currentUser.role : null,
-                progress: document.getElementById('c-progress').value
+                user_email: currentUser ? currentUser.email : null,
+                progress: document.getElementById('c-progress').value,
+                notes: document.getElementById('c-notes').value
             };
 
             fetch('/api/contractor/submit', {
@@ -685,8 +786,8 @@
             .then(async (res) => {
                 const data = await res.json();
                 if (res.ok && data.status === 'success') {
-                    alert(data.message || "Report Submitted Successfully!");
-                    loadProjects();
+                    alert(data.message);
+                    loadApprovalRequests();
                     switchPortal('gov');
                 } else {
                     alert("Submission Denied: " + (data.message || "Unauthorized access attempt."));
@@ -759,6 +860,7 @@
         }
 
         loadProjects();
+        loadApprovalRequests();
     </script>
 </body>
 </html>
