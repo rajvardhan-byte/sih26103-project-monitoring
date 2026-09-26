@@ -1,0 +1,13 @@
+# Python Virtual Environment
+venv/
+env/
+ENV/
+
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+
+# Local SQLite Database & Environment Keys
+*.db
+*.sqlite3
+.env

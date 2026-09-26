@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIH26103 - Integrated Project Monitoring Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen">
+
+    <!-- Header / Navbar -->
+    <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="bg-indigo-600 text-white p-2.5 rounded-xl font-bold text-lg"><i class="fa-solid fa-building-columns"></i></div>
+            <div>
+                <h1 class="text-lg font-bold text-white leading-none">Integrated Infrastructure Project Monitoring Platform</h1>
+                <p class="text-xs text-slate-400 mt-1">SIH26103 | MoSPI - Infrastructure & Project Monitoring Division</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 text-sm">
+            <!-- Portal Switcher (Admin button removed) -->
+            <div class="bg-slate-900 p-1 rounded-lg border border-slate-700 flex items-center text-xs">
+                <button id="btn-gov" onclick="switchPortal('gov')" class="px-3 py-1.5 rounded-md font-semibold bg-indigo-600 text-white transition">Government Reviewer</button>
+                <button id="btn-contractor" onclick="switchPortal('contractor')" class="px-3 py-1.5 rounded-md font-semibold text-slate-400 hover:text-white transition">Contractor Portal</button>
+            </div>
+
+            <!-- Profile Badge -->
+            <div id="profile-badge" onclick="openProfileModal()" class="flex items-center gap-2 bg-slate-900/80 hover:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700 text-xs text-slate-300 cursor-pointer transition">
+                <i class="fa-solid fa-circle-user text-indigo-400 text-sm"></i>
+                <div>
+                    <p id="nav-user-name" class="font-bold text-white leading-none">Guest User</p>
+                    <p id="nav-user-role" class="text-[10px] text-slate-400">Click to View Profile</p>
+                </div>
+            </div>
+
+            <!-- Auth Button -->
+            <button id="auth-btn" onclick="toggleAuthModal(true)" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
+                <i class="fa-solid fa-right-to-bracket"></i> Login / Register
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        
+        <!-- View 1: Government Reviewer Dashboard -->
+        <section id="gov-view" class="space-y-8">
+            <div class="bg-indigo-950/40 border border-indigo-500/30 rounded-xl p-4 flex flex-wrap items-center justify-between gap-4 text-xs">
+                <div class="flex items-center gap-2">
+                    <span class="relative flex h-2.5 w-2.5">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    <span class="font-bold text-indigo-200 uppercase tracking-wider">Automated Data Ingestion Active:</span>
+                </div>
+                <div class="flex items-center gap-4 text-slate-300 text-[11px]">
+                    <span><i class="fa-solid fa-building-columns text-indigo-400 mr-1"></i> Financial Gateway API</span>
+                    <span><i class="fa-solid fa-file-contract text-indigo-400 mr-1"></i> Contractor Monthly Reports</span>
+                    <span><i class="fa-solid fa-tree text-indigo-400 mr-1"></i> Forest Clearance Portal API</span>
+                    <span><i class="fa-solid fa-mobile-screen-button text-indigo-400 mr-1"></i> Field Engineer App Logs</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl">
+                    <p class="text-xs text-slate-400 uppercase font-semibold">Assigned Projects (Maharashtra)</p>
+                    <p class="text-2xl font-bold text-white mt-2">3 Projects</p>
+                </div>
+                <div class="bg-slate-800 border border-red-500/30 p-5 rounded-xl">
+                    <p class="text-xs text-red-400 uppercase font-semibold">Critical Delay Risk</p>
+                    <p class="text-2xl font-bold text-red-400 mt-2">1 Red Alert</p>
+                </div>
+                <div class="bg-slate-800 border border-amber-500/30 p-5 rounded-xl">
+                    <p class="text-xs text-amber-400 uppercase font-semibold">Medium Risk</p>
+                    <p class="text-2xl font-bold text-amber-400 mt-2">1 Flagged</p>
+                </div>
+                <div class="bg-slate-800 border border-emerald-500/30 p-5 rounded-xl">
+                    <p class="text-xs text-emerald-400 uppercase font-semibold">On Schedule</p>
+                    <p class="text-2xl font-bold text-emerald-400 mt-2">1 Healthy</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Jurisdiction Queue -->
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-6">
+                    <h2 class="text-md font-bold text-white mb-4 flex items-center justify-between">
+                        <span>Jurisdiction Queue</span>
+                        <i class="fa-solid fa-filter text-indigo-400 text-xs"></i>
+                    </h2>
+                    <div id="project-list" class="space-y-4">
+                        <p class="text-slate-400 text-sm">Loading projects from backend database...</p>
+                    </div>
+                </div>
+
+                <!-- Dynamic Project Review Area -->
+                <div class="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-xl p-6">
+                    <div id="alert-banner" class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6 flex items-start gap-3">
+                        <i class="fa-solid fa-triangle-exclamation text-red-400 text-xl mt-0.5"></i>
+                        <div>
+                            <h4 id="alert-title" class="text-sm font-bold text-red-400 uppercase tracking-wide">High Risk Alert Auto-Triggered by ML Pipeline</h4>
+                            <p id="alert-desc" class="text-xs text-slate-300 mt-1">Project has crossed delay threshold due to unresolved bottlenecks.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between border-b border-slate-700 pb-4 mb-6 gap-4">
+                        <div>
+                            <span id="risk-badge" class="bg-red-500/20 text-red-400 border border-red-500/30 text-xs px-2.5 py-1 rounded font-semibold">HIGH RISK</span>
+                            <h3 id="project-title" class="text-xl font-bold text-white mt-2">Nagpur Outer Ring Road (Sec 3)</h3>
+                            <p id="project-sub" class="text-xs text-slate-400 mt-1">Contractor: L&T Infrastructure Ltd. | Jurisdiction: Maharashtra Division</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-slate-400">Total Approved Budget</p>
+                            <p id="project-budget" class="text-xl font-bold text-indigo-400">₹1,250 Cr</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-700">
+                            <p class="text-xs text-slate-400 uppercase font-semibold">Predicted Delay</p>
+                            <p id="predicted-delay-text" class="text-2xl font-bold text-red-400 mt-1">8 Months</p>
+                        </div>
+                        <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-700">
+                            <p class="text-xs text-slate-400 uppercase font-semibold">Predicted Extra Cost</p>
+                            <p id="predicted-overrun-text" class="text-2xl font-bold text-red-400 mt-1">₹45 Cr</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-6 bg-slate-900/40 p-5 rounded-xl border border-slate-700/80">
+                        <h4 class="text-sm font-bold text-slate-200 mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-brain text-indigo-400"></i> Explainable AI (SHAP) Root-Cause Impact
+                        </h4>
+                        <div id="shap-causes" class="space-y-4"></div>
+                    </div>
+
+                    <!-- Dynamic What-If Simulator -->
+                    <div class="bg-slate-900/90 p-5 rounded-xl border border-indigo-500/30 mb-6">
+                        <h4 class="text-sm font-bold text-indigo-300 mb-1 flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-indigo-400"></i> What-If Intervention Simulator
+                        </h4>
+                        <p id="sim-desc" class="text-xs text-slate-400 mb-4">Simulate clearance approval speed to see live impact on completion schedule and taxpayer savings:</p>
+
+                        <div class="space-y-3">
+                            <div class="flex justify-between text-xs text-slate-300">
+                                <span id="simulator-label">Forest Clearance Target Timeframe:</span>
+                                <span id="days-val" class="text-indigo-400 font-bold text-sm">10 Days</span>
+                            </div>
+                            <input type="range" id="clearance-slider" min="5" max="45" value="10" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+                        </div>
+
+                        <div class="mt-4 pt-4 border-t border-slate-800 flex justify-between items-center text-xs">
+                            <div>Simulated Delay: <span id="sim-delay" class="font-bold text-emerald-400 text-sm">1 Month</span></div>
+                            <div>Estimated Taxpayer Savings: <span id="sim-save" class="font-bold text-emerald-400 text-sm">₹38 Cr</span></div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-4 border-t border-slate-700 pt-5">
+                        <button onclick="generateAdvisoryBrief()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 transition cursor-pointer shadow-lg shadow-indigo-600/20">
+                            <i class="fa-solid fa-file-pdf"></i> Generate Advisory Brief
+                        </button>
+                        <button onclick="escalateToMinistry()" class="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 transition cursor-pointer shadow-lg shadow-red-600/20">
+                            <i class="fa-solid fa-paper-plane"></i> Escalate to High Priority
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- View 2: Contractor Digital Submission Portal -->
+        <section id="contractor-view" class="hidden max-w-2xl mx-auto bg-slate-800 border border-slate-700 rounded-xl p-6">
+            <div class="border-b border-slate-700 pb-4 mb-6">
+                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-hard-hat text-indigo-400"></i> Contractor Monthly Digital Progress Portal
+                </h2>
+                <p class="text-xs text-slate-400 mt-1">Submit digital progress logs directly to government AI evaluation pipeline.</p>
+            </div>
+
+            <form id="contractor-form" onsubmit="submitContractorReport(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Assigned Verified Infrastructure Project</label>
+                    <select id="c-project" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Current Physical Completion Progress (%)</label>
+                    <input type="number" id="c-progress" min="0" max="100" value="65" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Bottleneck or Delay Description</label>
+                    <textarea id="c-notes" rows="3" placeholder="Specify land clearance or material supply issues..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 text-xs">Stage 2 Forest Clearance pending for Section 3 milestone 2.</textarea>
+                </div>
+
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg text-sm transition cursor-pointer">
+                    Submit Progress Report to MoSPI
+                </button>
+            </form>
+        </section>
+
+        <!-- View 3: Admin Portal (Accessible ONLY on Admin Login) -->
+        <section id="admin-view" class="hidden bg-slate-800 border border-slate-700 rounded-xl p-6 space-y-6">
+            <div class="flex flex-wrap items-center justify-between border-b border-slate-700 pb-4 gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-users-gear text-red-400"></i> System Administrator - Registered Users & Role Registry
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">Live audit log of all registered users, official roles, organizations, and assigned project IDs.</p>
+                </div>
+                <button onclick="loadAdminUserRegistry()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs px-3 py-1.5 rounded-lg transition">
+                    <i class="fa-solid fa-rotate"></i> Refresh Registry
+                </button>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-900/80 uppercase text-slate-400 text-[11px] border-b border-slate-700">
+                        <tr>
+                            <th class="p-3">User ID</th>
+                            <th class="p-3">Full Name</th>
+                            <th class="p-3">Official Email</th>
+                            <th class="p-3">Role</th>
+                            <th class="p-3">Organization</th>
+                            <th class="p-3">Assigned Project ID</th>
+                            <th class="p-3">Jurisdiction</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-user-table-body" class="divide-y divide-slate-700/60">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- User Profile Modal -->
+    <div id="profile-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl relative space-y-4">
+            <button onclick="toggleProfileModal(false)" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            
+            <div class="flex items-center gap-3 border-b border-slate-700 pb-4">
+                <div class="bg-indigo-600 text-white p-3 rounded-xl font-bold text-xl"><i class="fa-solid fa-user-check"></i></div>
+                <div>
+                    <h3 id="p-modal-name" class="text-lg font-bold text-white">Guest User</h3>
+                    <p id="p-modal-role" class="text-xs text-indigo-400 font-semibold">Not Logged In</p>
+                </div>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700 flex justify-between">
+                    <span class="text-slate-400">Official Email:</span>
+                    <span id="p-modal-email" class="font-bold text-white">N/A</span>
+                </div>
+                <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700 flex justify-between">
+                    <span class="text-slate-400">Organization / Agency:</span>
+                    <span id="p-modal-org" class="font-bold text-white">N/A</span>
+                </div>
+                <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700 flex justify-between">
+                    <span class="text-slate-400">Assigned Jurisdiction:</span>
+                    <span id="p-modal-region" class="font-bold text-white">Maharashtra Division</span>
+                </div>
+                <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700 flex justify-between">
+                    <span class="text-slate-400">Assigned Project ID:</span>
+                    <span id="p-modal-pid" class="font-bold text-indigo-400">N/A</span>
+                </div>
+            </div>
+
+            <button onclick="toggleProfileModal(false)" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 rounded-lg text-xs transition">
+                Close Profile
+            </button>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl relative">
+            <button onclick="toggleAuthModal(false)" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            
+            <div class="flex border-b border-slate-700 mb-6">
+                <button id="tab-login-btn" onclick="switchAuthTab('login')" class="flex-1 py-2 font-bold text-sm border-b-2 border-indigo-500 text-indigo-400">Login</button>
+                <button id="tab-register-btn" onclick="switchAuthTab('register')" class="flex-1 py-2 font-bold text-sm border-b-2 border-transparent text-slate-400 hover:text-white">Create Account</button>
+            </div>
+
+            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+                <div class="bg-indigo-950/40 p-2.5 rounded-lg border border-indigo-500/30 text-[11px] text-indigo-300">
+                    <p class="font-semibold"><i class="fa-solid fa-user-shield"></i> Admin Quick Credentials:</p>
+                    <p>Email: <code class="text-white">admin@mospi.gov.in</code> | Password: <code class="text-white">admin123</code></p>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Official Email Address</label>
+                    <input type="email" id="login-email" required placeholder="e.g. admin@mospi.gov.in" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Password</label>
+                    <input type="password" id="login-pass" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg text-sm transition mt-2 cursor-pointer">
+                    Login to Portal
+                </button>
+            </form>
+
+            <form id="register-form" onsubmit="handleRegistration(event)" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Full Name</label>
+                    <input type="text" id="reg-name" required placeholder="e.g. Om Aswar" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Official Email Address</label>
+                    <input type="email" id="reg-email" required placeholder="e.g. omaswar175@gmail.com" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Role</label>
+                        <select id="reg-role" onchange="toggleContractorVerificationFields()" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                            <option value="Government Officer">Government Officer</option>
+                            <option value="Contractor">Contractor</option>
+                            <option value="Site Engineer">Site Engineer</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Organization / Agency</label>
+                        <input type="text" id="reg-org" required placeholder="e.g. Tata Projects / L&T" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <div id="contractor-verification-box" class="bg-indigo-950/60 p-3 rounded-lg border border-indigo-500/40 hidden space-y-2">
+                    <p class="text-[11px] text-indigo-300 font-semibold"><i class="fa-solid fa-shield-halved"></i> Contractor License Key Verification</p>
+                    <input type="text" id="reg-contract-key" placeholder="License Key: TATA-MUM-4 | LNT-NAG-3 | MEGA-PUN-2" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500 uppercase">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Password</label>
+                    <input type="password" id="reg-pass" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg text-sm transition mt-2 cursor-pointer">
+                    Verify & Submit Registration
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let projectsData = [];
+        let selectedProjectId = 1;
+
+        function loadProjects() {
+            fetch('/api/projects')
+                .then(res => res.json())
+                .then(data => {
+                    projectsData = data.data;
+                    const list = document.getElementById('project-list');
+                    list.innerHTML = '';
+                    projectsData.forEach((p) => {
+                        const badgeClass = p.risk_level === 'High' ? 'bg-red-500/20 text-red-400 border-red-500/30' : 
+                                          p.risk_level === 'Medium' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+                        list.innerHTML += `
+                            <div onclick="selectProject(${p.id})" class="p-4 bg-slate-900/50 rounded-lg border ${p.risk_level === 'High' ? 'border-red-500/40 ring-1 ring-red-500/20' : 'border-slate-700/60'} hover:border-slate-400 transition cursor-pointer">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="text-sm font-bold text-white">${p.name}</h4>
+                                    <span class="text-[10px] px-2 py-0.5 rounded border ${badgeClass}">${p.risk_level} Risk</span>
+                                </div>
+                                <div class="flex justify-between items-center mt-3 text-xs text-slate-400">
+                                    <span>Budget: ${p.cost}</span>
+                                    <span>Progress: ${p.progress}%</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    if (projectsData.length > 0) selectProject(selectedProjectId);
+                });
+        }
+
+        function selectProject(id) {
+            selectedProjectId = id;
+            const p = projectsData.find(item => item.id === id);
+            if (!p) return;
+
+            document.getElementById('project-title').innerText = p.name;
+            document.getElementById('project-sub').innerText = `Contractor: ${p.contractor} | Jurisdiction: ${p.region}`;
+            document.getElementById('project-budget').innerText = p.cost;
+            document.getElementById('predicted-delay-text').innerText = p.predicted_delay;
+            document.getElementById('predicted-overrun-text').innerText = p.predicted_overrun;
+
+            const badge = document.getElementById('risk-badge');
+            const alertBanner = document.getElementById('alert-banner');
+            
+            if (p.risk_level === 'High') {
+                badge.className = "bg-red-500/20 text-red-400 border border-red-500/30 text-xs px-2.5 py-1 rounded font-semibold";
+                badge.innerText = "HIGH RISK";
+                alertBanner.className = "bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6 flex items-start gap-3";
+                document.getElementById('alert-title').innerText = "High Risk Alert Auto-Triggered by ML Pipeline";
+                document.getElementById('alert-desc').innerText = "Project has crossed delay threshold due to unresolved bottlenecks.";
+            } else if (p.risk_level === 'Medium') {
+                badge.className = "bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-1 rounded font-semibold";
+                badge.innerText = "MEDIUM RISK";
+                alertBanner.className = "bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 mb-6 flex items-start gap-3";
+                document.getElementById('alert-title').innerText = "Medium Risk Alert";
+                document.getElementById('alert-desc').innerText = "Project is experiencing moderate delays in material procurement.";
+            } else {
+                badge.className = "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-1 rounded font-semibold";
+                badge.innerText = "ON SCHEDULE";
+                alertBanner.className = "bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4 mb-6 flex items-start gap-3";
+                document.getElementById('alert-title').innerText = "Healthy Project Status";
+                document.getElementById('alert-desc').innerText = "All milestones are on track and progressing according to plan.";
+            }
+
+            const shapBox = document.getElementById('shap-causes');
+            const simLabel = document.getElementById('simulator-label');
+            const simDesc = document.getElementById('sim-desc');
+
+            if (p.id === 1) { // Nagpur
+                simLabel.innerText = "Forest Clearance Target Timeframe:";
+                simDesc.innerText = "Simulate forest clearance approval speed to see live impact on completion schedule and taxpayer savings:";
+                shapBox.innerHTML = `
+                    <div><div class="flex justify-between text-xs mb-1"><span class="text-slate-300">Delay in acquiring Forest Land Clearance</span><span class="text-red-400 font-bold">65% Cause</span></div><div class="w-full bg-slate-800 h-2.5 rounded-full"><div class="bg-red-500 h-full rounded-full" style="width: 65%"></div></div></div>
+                    <div><div class="flex justify-between text-xs mb-1"><span class="text-slate-300">Monsoon material supply shortages</span><span class="text-amber-400 font-bold">25% Cause</span></div><div class="w-full bg-slate-800 h-2.5 rounded-full"><div class="bg-amber-500 h-full rounded-full" style="width: 25%"></div></div></div>
+                `;
+            } else if (p.id === 2) { // Pune
+                simLabel.innerText = "Land Compensation Dispute Settlement Timeframe:";
+                simDesc.innerText = "Simulate land dispute resolution speed to see live impact on high-speed rail completion:";
+                shapBox.innerHTML = `
+                    <div><div class="flex justify-between text-xs mb-1"><span class="text-slate-300">Land Acquisition Compensation Disputes</span><span class="text-amber-400 font-bold">50% Cause</span></div><div class="w-full bg-slate-800 h-2.5 rounded-full"><div class="bg-amber-500 h-full rounded-full" style="width: 50%"></div></div></div>
+                    <div><div class="flex justify-between text-xs mb-1"><span class="text-slate-300">Railway Safety Inspector Approvals</span><span class="text-indigo-400 font-bold">30% Cause</span></div><div class="w-full bg-slate-800 h-2.5 rounded-full"><div class="bg-indigo-500 h-full rounded-full" style="width: 30%"></div></div></div>
+                `;
+            } else { // Mumbai
+                simLabel.innerText = "Civil Milestone Acceleration Timeframe:";
+                simDesc.innerText = "Simulate construction crew shifting to optimize metro line extension schedule:";
+                shapBox.innerHTML = `
+                    <div><div class="flex justify-between text-xs mb-1"><span class="text-slate-300">Standard Civil Operations</span><span class="text-emerald-400 font-bold">100% On Track</span></div><div class="w-full bg-slate-800 h-2.5 rounded-full"><div class="bg-emerald-500 h-full rounded-full" style="width: 100%"></div></div></div>
+                `;
+            }
+
+            triggerSimulation(document.getElementById('clearance-slider').value);
+        }
+
+        function triggerSimulation(val) {
+            document.getElementById('days-val').innerText = `${val} Days`;
+
+            fetch('/api/simulate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ clearance_days: val, project_id: selectedProjectId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('sim-delay').innerText = `${data.simulated_delay_months} Month${data.simulated_delay_months > 1 ? 's' : ''}`;
+                document.getElementById('sim-save').innerText = `₹${data.estimated_cost_saved_cr} Cr`;
+            });
+        }
+
+        function loadAdminUserRegistry() {
+            fetch('/api/admin/users')
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById('admin-user-table-body');
+                    tbody.innerHTML = '';
+                    data.data.forEach(u => {
+                        const roleColor = u.role === 'Platform Administrator' ? 'text-red-400 font-bold' : 
+                                          u.role === 'Contractor' ? 'text-amber-400' : 'text-indigo-400';
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-slate-700/40 transition">
+                                <td class="p-3 font-mono font-bold">#${u.id}</td>
+                                <td class="p-3 font-semibold text-white">${u.full_name}</td>
+                                <td class="p-3">${u.email}</td>
+                                <td class="p-3 ${roleColor}">${u.role}</td>
+                                <td class="p-3">${u.organization}</td>
+                                <td class="p-3 font-mono">${u.assigned_project_id ? 'Project #' + u.assigned_project_id : 'All Projects'}</td>
+                                <td class="p-3">${u.region}</td>
+                            </tr>
+                        `;
+                    });
+                });
+        }
+
+        function toggleContractorVerificationFields() {
+            const role = document.getElementById('reg-role').value;
+            document.getElementById('contractor-verification-box').classList.toggle('hidden', role !== 'Contractor');
+        }
+
+        function populateContractorPortalDropdown() {
+            const select = document.getElementById('c-project');
+            select.innerHTML = '';
+
+            if (currentUser && currentUser.role === 'Contractor' && currentUser.assigned_project_id) {
+                const assigned = projectsData.find(p => p.id === parseInt(currentUser.assigned_project_id));
+                if (assigned) {
+                    select.innerHTML = `<option value="${assigned.id}">${assigned.name} - ${assigned.contractor}</option>`;
+                    return;
+                }
+            }
+
+            projectsData.forEach(p => {
+                select.innerHTML += `<option value="${p.id}">${p.name} - ${p.contractor}</option>`;
+            });
+        }
+
+        function switchPortal(type) {
+            if (type === 'contractor' && !currentUser) {
+                alert("ACCESS RESTRICTED: Please login or register first to access the Contractor Portal!");
+                toggleAuthModal(true);
+                return;
+            }
+
+            document.getElementById('gov-view').classList.add('hidden');
+            document.getElementById('contractor-view').classList.add('hidden');
+            document.getElementById('admin-view').classList.add('hidden');
+
+            document.getElementById('btn-gov').className = 'px-3 py-1.5 rounded-md font-semibold text-slate-400 hover:text-white transition';
+            document.getElementById('btn-contractor').className = 'px-3 py-1.5 rounded-md font-semibold text-slate-400 hover:text-white transition';
+
+            if (type === 'gov') {
+                document.getElementById('gov-view').classList.remove('hidden');
+                document.getElementById('btn-gov').className = 'px-3 py-1.5 rounded-md font-semibold bg-indigo-600 text-white transition';
+            } else if (type === 'contractor') {
+                populateContractorPortalDropdown();
+                document.getElementById('contractor-view').classList.remove('hidden');
+                document.getElementById('btn-contractor').className = 'px-3 py-1.5 rounded-md font-semibold bg-indigo-600 text-white transition';
+            } else if (type === 'admin') {
+                loadAdminUserRegistry();
+                document.getElementById('admin-view').classList.remove('hidden');
+            }
+        }
+
+        function toggleAuthModal(show) {
+            document.getElementById('auth-modal').classList.toggle('hidden', !show);
+        }
+
+        function toggleProfileModal(show) {
+            document.getElementById('profile-modal').classList.toggle('hidden', !show);
+        }
+
+        function openProfileModal() {
+            if (!currentUser) {
+                alert("Please login or register to view your full profile details.");
+                toggleAuthModal(true);
+                return;
+            }
+
+            document.getElementById('p-modal-name').innerText = currentUser.full_name;
+            document.getElementById('p-modal-role').innerText = currentUser.role;
+            document.getElementById('p-modal-email').innerText = currentUser.email;
+            document.getElementById('p-modal-org').innerText = currentUser.organization;
+            document.getElementById('p-modal-region').innerText = currentUser.region || 'Maharashtra Division';
+            document.getElementById('p-modal-pid').innerText = currentUser.assigned_project_id ? `Project #${currentUser.assigned_project_id}` : 'All Regional Projects';
+
+            toggleProfileModal(true);
+        }
+
+        function switchAuthTab(tab) {
+            if (tab === 'login') {
+                document.getElementById('login-form').classList.remove('hidden');
+                document.getElementById('register-form').classList.add('hidden');
+                document.getElementById('tab-login-btn').className = 'flex-1 py-2 font-bold text-sm border-b-2 border-indigo-500 text-indigo-400';
+                document.getElementById('tab-register-btn').className = 'flex-1 py-2 font-bold text-sm border-b-2 border-transparent text-slate-400 hover:text-white';
+            } else {
+                document.getElementById('login-form').classList.add('hidden');
+                document.getElementById('register-form').classList.remove('hidden');
+                document.getElementById('tab-register-btn').className = 'flex-1 py-2 font-bold text-sm border-b-2 border-indigo-500 text-indigo-400';
+                document.getElementById('tab-login-btn').className = 'flex-1 py-2 font-bold text-sm border-b-2 border-transparent text-slate-400 hover:text-white';
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const payload = {
+                email: document.getElementById('login-email').value,
+                password: document.getElementById('login-pass').value
+            };
+
+            fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(async (res) => {
+                const data = await res.json();
+                if (res.ok && data.status === 'success') {
+                    currentUser = data.user;
+                    updateUserUI(currentUser);
+                    alert(data.message);
+                    toggleAuthModal(false);
+                    document.getElementById('login-form').reset();
+
+                    // Automatically switch view based on user role
+                    if (currentUser.role === 'Platform Administrator') {
+                        switchPortal('admin');
+                    } else if (currentUser.role === 'Contractor') {
+                        switchPortal('contractor');
+                    } else {
+                        switchPortal('gov');
+                    }
+                } else {
+                    alert("Login Failed: " + (data.message || "Invalid credentials."));
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Server Network Error: Ensure Python app.py is running!");
+            });
+        }
+
+        function handleRegistration(e) {
+            e.preventDefault();
+            const payload = {
+                full_name: document.getElementById('reg-name').value,
+                email: document.getElementById('reg-email').value,
+                role: document.getElementById('reg-role').value,
+                organization: document.getElementById('reg-org').value,
+                contract_key: document.getElementById('reg-contract-key').value,
+                password: document.getElementById('reg-pass').value
+            };
+
+            fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(async (res) => {
+                const data = await res.json();
+                if (res.ok && data.status === 'success') {
+                    currentUser = data.user;
+                    updateUserUI(currentUser);
+                    alert(data.message);
+                    toggleAuthModal(false);
+                    document.getElementById('register-form').reset();
+
+                    if (currentUser.role === 'Contractor') {
+                        switchPortal('contractor');
+                    } else {
+                        switchPortal('gov');
+                    }
+                } else {
+                    alert("Registration Failed: " + (data.message || "Invalid contract key or email already registered."));
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Server Network Error: Ensure Python app.py is running!");
+            });
+        }
+
+        function updateUserUI(user) {
+            document.getElementById('nav-user-name').innerText = user.full_name;
+            document.getElementById('nav-user-role').innerText = `${user.role} (${user.organization})`;
+            document.getElementById('auth-btn').innerHTML = `<i class="fa-solid fa-right-from-bracket"></i> Logout`;
+            document.getElementById('auth-btn').onclick = logoutUser;
+        }
+
+        function logoutUser() {
+            currentUser = null;
+            document.getElementById('nav-user-name').innerText = "Guest User";
+            document.getElementById('nav-user-role').innerText = "Not Logged In";
+            document.getElementById('auth-btn').innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> Login / Register`;
+            document.getElementById('auth-btn').onclick = () => toggleAuthModal(true);
+            switchPortal('gov');
+            alert("You have logged out.");
+        }
+
+        function submitContractorReport(e) {
+            e.preventDefault();
+            const payload = {
+                project_id: document.getElementById('c-project').value,
+                user_assigned_project_id: currentUser ? currentUser.assigned_project_id : null,
+                user_role: currentUser ? currentUser.role : null,
+                progress: document.getElementById('c-progress').value
+            };
+
+            fetch('/api/contractor/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(async (res) => {
+                const data = await res.json();
+                if (res.ok && data.status === 'success') {
+                    alert(data.message || "Report Submitted Successfully!");
+                    loadProjects();
+                    switchPortal('gov');
+                } else {
+                    alert("Submission Denied: " + (data.message || "Unauthorized access attempt."));
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Failed to submit report. Ensure Python app.py is running!");
+            });
+        }
+
+        document.getElementById('clearance-slider').addEventListener('input', (e) => {
+            if (!currentUser) {
+                alert("ACCESS RESTRICTED: Please login or register to use the What-If Intervention Simulator!");
+                e.target.value = 45;
+                document.getElementById('days-val').innerText = "45 Days";
+                toggleAuthModal(true);
+                return;
+            }
+            triggerSimulation(e.target.value);
+        });
+
+        function generateAdvisoryBrief() {
+            if (!currentUser) {
+                alert("ACCESS RESTRICTED: Please login or register to generate Advisory Brief PDFs!");
+                toggleAuthModal(true);
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const officerName = currentUser.full_name;
+            const officerRole = `${currentUser.role} (${currentUser.organization})`;
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.text("MoSPI - INFRASTRUCTURE PROJECT ADVISORY BRIEF", 15, 20);
+
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Target Project: ${document.getElementById('project-title').innerText}`, 15, 30);
+            doc.text(`Assigned Officer: ${officerName} - ${officerRole}`, 15, 36);
+            doc.text("Date Generated: " + new Date().toLocaleDateString(), 15, 42);
+
+            doc.setLineWidth(0.5);
+            doc.line(15, 46, 195, 46);
+
+            doc.setFont("helvetica", "bold");
+            doc.text("CRITICAL RISK METRICS (ML PREDICTED):", 15, 55);
+            doc.setFont("helvetica", "normal");
+            doc.text(`- Predicted Delay: ${document.getElementById('predicted-delay-text').innerText}`, 20, 63);
+            doc.text(`- Predicted Budget Overrun: ${document.getElementById('predicted-overrun-text').innerText}`, 20, 71);
+
+            doc.setFont("helvetica", "bold");
+            doc.text("RECOMMENDED ACTION:", 15, 83);
+            doc.setFont("helvetica", "normal");
+            doc.text("Expedite bottleneck clearance to prevent projected delays and cost overruns.", 20, 91);
+
+            doc.save("Project_Advisory_Brief.pdf");
+            alert("1-Page Advisory Brief PDF downloaded successfully!");
+        }
+
+        function escalateToMinistry() {
+            if (!currentUser) {
+                alert("ACCESS RESTRICTED: Please login or register to escalate alerts to the Ministry!");
+                toggleAuthModal(true);
+                return;
+            }
+            alert("HIGH PRIORITY ESCALATION SENT!\n\n1. Email & SMS alert dispatched to Clearance Authorities.\n2. Notification logged on MoSPI Senior Ministry Dashboard.");
+        }
+
+        loadProjects();
+    </script>
+</body>
+</html>
